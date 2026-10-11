@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>港币存款收益计算器</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #eef2ff, #f8fafc);
+      color: #1e293b;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #2563eb, #0f766e);
+      color: white;
+      padding: 28px;
+    }
+
+    .header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .header p {
+      margin: 0;
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      padding: 28px;
+    }
+
+    .panel {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      font-size: 20px;
+      color: #0f172a;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 15px;
+      background: white;
+      outline: none;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .hint {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      background: linear-gradient(135deg, #2563eb, #0f766e);
+      color: white;
+      padding: 13px 16px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    button:hover {
+      opacity: 0.92;
+    }
+
+    .result-card {
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .result-card .label {
+      font-size: 14px;
+      color: #64748b;
+      margin-bottom: 5px;
+    }
+
+    .result-card .value {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .positive {
+      color: #16a34a !important;
+    }
+
+    .negative {
+      color: #dc2626 !important;
+    }
+
+    .neutral {
+      color: #2563eb !important;
+    }
+
+    .summary {
+      grid-column: 1 / -1;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 16px;
+      padding: 18px 20px;
+      line-height: 1.8;
+      color: #7c2d12;
+    }
+
+    .formula {
+      grid-column: 1 / -1;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 16px;
+      padding: 18px 20px;
+      line-height: 1.8;
+      color: #334155;
+    }
+
+    .formula code {
+      background: #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 12px;
+      }
+
+      .content {
+        grid-template-columns: 1fr;
+        padding: 18px;
+      }
+
+      .header {
+        padding: 22px;
+      }
+
+      .header h1 {
+        font-size: 23px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>港币存款收益计算器</h1>
+      <p>
+        输入当前汇率、香港银行存款利率和存款期限，自动估算你把人民币换成港币后存入香港银行的收益。
+      </p>
+    </div>
+
+    <div class="content">
+      <div class="panel">
+        <h2>输入参数</h2>
+
+        <div class="form-group">
+          <label for="principal">人民币本金</label>
+          <input id="principal" type="number" value="50000" min="0" step="100" />
+          <div class="hint">例如：50000，表示 50,000 元人民币。</div>
+        </div>
+
+        <div class="form-group">
+          <label for="currentRate">当前汇率：1 港币 = 多少人民币</label>
+          <input id="currentRate" type="number" value="0.91" min="0" step="0.0001" />
+          <div class="hint">例如 0.91，表示 1 HKD = 0.91 RMB。</div>
+        </div>
+
+        <div class="form-group">
+          <label for="futureRate">到期预计汇率：1 港币 = 多少人民币</label>
+          <input id="futureRate" type="number" value="0.91" min="0" step="0.0001" />
+          <div class="hint">如果你只想看汇率不变的情况，就填和当前汇率一样。</div>
+        </div>
+
+        <div class="form-group">
+          <label for="interestRate">香港银行港币存款年利率</label>
+          <input id="interestRate" type="number" value="2.4" min="0" step="0.01" />
+          <div class="hint">例如 2.4，表示年化利率 2.4%。</div>
+        </div>
+
+        <div class="form-group">
+          <label for="duration">存款期限</label>
+          <input id="duration" type="number" value="12" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label for="durationUnit">期限单位</label>
+          <select id="durationUnit">
+            <option value="months" selected>个月</option>
+            <option value="days">天</option>
+            <option value="years">年</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="cost">换汇、转账等总成本，人民币计</label>
+          <input id="cost" type="number" value="0" min="0" step="1" />
+          <div class="hint">如果暂不考虑手续费，填 0。</div>
+        </div>
+
+        <button onclick="calculate()">计算收益</button>
+      </div>
+
+      <div class="panel">
+        <h2>计算结果</h2>
+
+        <div class="result-card">
+          <div class="label">可换得港币</div>
+          <div class="value neutral" id="hkdAmount">-</div>
+        </div>
+
+        <div class="result-card">
+          <div class="label">到期港币本息</div>
+          <div class="value neutral" id="hkdFinal">-</div>
+        </div>
+
+        <div class="result-card">
+          <div class="label">到期折合人民币</div>
+          <div class="value neutral" id="rmbFinal">-</div>
+        </div>
+
+        <div class="result-card">
+          <div class="label">净收益，扣除成本后</div>
+          <div class="value" id="profit">-</div>
+        </div>
+
+        <div class="result-card">
+          <div class="label">总收益率</div>
+          <div class="value" id="totalReturn">-</div>
+        </div>
+
+        <div class="result-card">
+          <div class="label">折合年化收益率</div>
+          <div class="value" id="annualReturn">-</div>
+        </div>
+
+        <div class="result-card">
+          <div class="label">盈亏平衡汇率</div>
+          <div class="value neutral" id="breakEvenRate">-</div>
+          <div class="hint">到期时 1 港币兑人民币汇率低于该值，你会亏损；高于该值，你会盈利。</div>
+        </div>
+      </div>
+
+      <div class="summary" id="summary">
+        请填写参数后点击“计算收益”。
+      </div>
+
+      <div class="formula">
+        <strong>计算逻辑：</strong><br />
+        <code>可换港币 = 人民币本金 ÷ 当前港币兑人民币汇率</code><br />
+        <code>到期港币本息 = 可换港币 × (1 + 年利率 × 存款年数)</code><br />
+        <code>到期人民币 = 到期港币本息 × 到期港币兑人民币汇率</code><br />
+        <code>净收益 = 到期人民币 - 人民币本金 - 换汇转账成本</code>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function formatMoney(value, currency) {
+      return new Intl.NumberFormat("zh-CN", {
+        style: "currency",
+        currency: currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(value);
+    }
+
+    function formatPercent(value) {
+      return value.toFixed(2) + "%";
+    }
+
+    function getYears(duration, unit) {
+      if (unit === "days") {
+        return duration / 365;
+      }
+      if (unit === "months") {
+        return duration / 12;
+      }
+      return duration;
+    }
+
+    function setColor(element, value) {
+      element.classList.remove("positive", "negative", "neutral");
+
+      if (value > 0) {
+        element.classList.add("positive");
+      } else if (value < 0) {
+        element.classList.add("negative");
+      } else {
+        element.classList.add("neutral");
+      }
+    }
+
+    function calculate() {
+      const principal = Number(document.getElementById("principal").value);
+      const currentRate = Number(document.getElementById("currentRate").value);
+      const futureRate = Number(document.getElementById("futureRate").value);
+      const interestRate = Number(document.getElementById("interestRate").value) / 100;
+      const duration = Number(document.getElementById("duration").value);
+      const durationUnit = document.getElementById("durationUnit").value;
+      const cost = Number(document.getElementById("cost").value);
+
+      if (
+        principal <= 0 ||
+        currentRate <= 0 ||
+        futureRate <= 0 ||
+        interestRate < 0 ||
+        duration <= 0 ||
+        cost < 0
+      ) {
+        document.getElementById("summary").innerHTML =
+          "请输入有效参数：本金、汇率、期限必须大于 0，利率和成本不能为负数。";
+        return;
+      }
+
+      const years = getYears(duration, durationUnit);
+
+      const hkdAmount = principal / currentRate;
+
+      // 简单利息计算。大部分定期存款报价可以先按简单年化估算。
+      const hkdFinal = hkdAmount * (1 + interestRate * years);
+
+      const rmbFinalBeforeCost = hkdFinal * futureRate;
+      const rmbFinal = rmbFinalBeforeCost - cost;
+
+      const profit = rmbFinal - principal;
+      const totalReturn = profit / principal;
+
+      let annualReturn;
+      if (years > 0 && rmbFinal > 0) {
+        annualReturn = Math.pow(rmbFinal / principal, 1 / years) - 1;
+      } else {
+        annualReturn = 0;
+      }
+
+      // 盈亏平衡：hkdFinal × breakEvenRate - cost = principal
+      const breakEvenRate = (principal + cost) / hkdFinal;
+
+      document.getElementById("hkdAmount").textContent = formatMoney(hkdAmount, "HKD");
+      document.getElementById("hkdFinal").textContent = formatMoney(hkdFinal, "HKD");
+      document.getElementById("rmbFinal").textContent = formatMoney(rmbFinal, "CNY");
+      document.getElementById("profit").textContent = formatMoney(profit, "CNY");
+      document.getElementById("totalReturn").textContent = formatPercent(totalReturn * 100);
+      document.getElementById("annualReturn").textContent = formatPercent(annualReturn * 100);
+      document.getElementById("breakEvenRate").textContent =
+        "1 HKD = " + breakEvenRate.toFixed(4) + " RMB";
+
+      setColor(document.getElementById("profit"), profit);
+      setColor(document.getElementById("totalReturn"), totalReturn);
+      setColor(document.getElementById("annualReturn"), annualReturn);
+
+      let directionText = "";
+      if (futureRate > currentRate) {
+        directionText = "到期港币兑人民币汇率高于当前汇率，港币相对人民币升值，对你有利。";
+      } else if (futureRate < currentRate) {
+        directionText = "到期港币兑人民币汇率低于当前汇率，港币相对人民币贬值，对你不利。";
+      } else {
+        directionText = "到期汇率与当前汇率相同，收益主要来自港币存款利息。";
+      }
+
+      const profitText = profit >= 0
+        ? "预计盈利 " + formatMoney(profit, "CNY")
+        : "预计亏损 " + formatMoney(Math.abs(profit), "CNY");
+
+      document.getElementById("summary").innerHTML =
+        "<strong>结果解读：</strong><br>" +
+        "你用 " + formatMoney(principal, "CNY") +
+        " 按当前汇率 1 HKD = " + currentRate.toFixed(4) + " RMB 换汇，可得到约 " +
+        formatMoney(hkdAmount, "HKD") + "。<br>" +
+        "按照港币年化利率 " + formatPercent(interestRate * 100) +
+        " 存 " + duration + getUnitText(durationUnit) +
+        "，到期港币本息约为 " + formatMoney(hkdFinal, "HKD") + "。<br>" +
+        "若到期汇率为 1 HKD = " + futureRate.toFixed(4) +
+        " RMB，扣除成本后最终约为 " + formatMoney(rmbFinal, "CNY") +
+        "，" + profitText + "，总收益率为 " + formatPercent(totalReturn * 100) +
+        "，折合年化收益率为 " + formatPercent(annualReturn * 100) + "。<br>" +
+        directionText;
+    }
+
+    function getUnitText(unit) {
+      if (unit === "days") return "天";
+      if (unit === "months") return "个月";
+      return "年";
+    }
+
+    calculate();
+  </script>
+</body>
+</html>
